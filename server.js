@@ -149,6 +149,10 @@ export class StripeClient {
 		});
 	};
 
+	createTerminalConnectionToken = async () => {
+		return await this.request('terminal/connection_tokens');
+	};
+
 	retrieveTerminalReader = async readerId => {
 		return await this.request(`terminal/readers/${readerId}`, {}, 'GET');
 	};
