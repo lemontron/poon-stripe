@@ -32,12 +32,19 @@ export const registerStripeEventListener = (eventType, listener) => {
 	listeners.push(listener);
 	stripeEventListeners.set(eventType, listeners);
 
-	return () => {
+	return () => { // Returns an unregister handler function
 		stripeEventListeners.set(eventType, stripeEventListeners.get(eventType).filter(registered => registered !== listener));
 	};
 };
 
-api.post('/stripe', [express.raw({type: 'application/json'}), verifyStripeSignature], async (req, res) => {
+api.get('/stripe', (req, res) => {
+	res.status(200).end('This is a POST endpoint');
+});
+
+api.post('/stripe', [
+	express.raw({type: 'application/json'}),
+	verifyStripeSignature,
+], async (req, res) => {
 	try {
 		const event = req.stripeEvent;
 		console.log('[webhook]', event.type, event.data);

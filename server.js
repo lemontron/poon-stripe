@@ -168,9 +168,7 @@ export class StripeClient {
 	processReaderPaymentIntent = async ({readerId, paymentIntentId}) => {
 		return await this.request(`terminal/readers/${readerId}/process_payment_intent`, {
 			'payment_intent': paymentIntentId,
-			'process_config': {
-				'enable_customer_cancellation': true,
-			},
+			'process_config': {'enable_customer_cancellation': true},
 		});
 	};
 
@@ -183,4 +181,4 @@ export class StripeClient {
 	};
 }
 
-export default new StripeClient(Meteor.isDevelopment ? Meteor.settings.stripeTest : Meteor.settings.stripeKey);
+export const Stripe = new StripeClient(Meteor.isDevelopment ? Meteor.settings.stripeTest : Meteor.settings.stripeKey);

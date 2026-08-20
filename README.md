@@ -9,5 +9,5 @@ meteor add poon-stripe
 ```
 
 ```javascript
-import stripe, { registerStripeEventListener } from 'meteor/poon-stripe';
+import { Stripe, registerStripeEventListener } from 'meteor/poon-stripe';
 ```
