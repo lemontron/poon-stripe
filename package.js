@@ -13,5 +13,5 @@ Package.onUse(api => {
 	api.use('meteor');
 	api.use('modules');
 	api.use('poon-api');
-	api.mainModule('server.js', 'server');
+	api.mainModule('index.js', 'server');
 });
