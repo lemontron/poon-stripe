@@ -19,13 +19,14 @@ export class StripeClient {
 		this.secretKey = secretKey;
 	}
 
-	request = async (path, data = {}, method = 'POST') => {
+	request = async (path, data = {}, method = 'POST', idempotencyKey) => {
 		const response = await fetch(`https://api.stripe.com/v1/${path}`, {
 			method,
 			'headers': {
 				'Authorization': `Bearer ${this.secretKey}`,
 				'Content-Type': 'application/x-www-form-urlencoded',
 				'Stripe-Version': STRIPE_VERSION,
+				...(idempotencyKey ? {'Idempotency-Key': idempotencyKey} : {}),
 			},
 			'body': method === 'POST' ? createSearchParams(data) : undefined,
 		});
@@ -93,18 +94,19 @@ export class StripeClient {
 		'quantity': 1,
 	});
 
-	createCheckoutSession = async (order, price) => {
+	createCheckoutSession = async (order, transfer) => {
 		return await this.request('checkout/sessions', {
 			'mode': 'payment',
 			'ui_mode': 'elements',
 			'return_url': `${Meteor.absoluteUrl()}kiosk/${order._id}/payment`,
 			'line_items': [
 				...order.items.map(this.createLineItem),
-				this.createTaxLineItem(price),
+				this.createTaxLineItem(transfer),
 			],
 			'client_reference_id': order._id,
 			'metadata': {
 				'orderId': order._id,
+				'transferId': transfer._id,
 			},
 			'payment_method_types': ['card'],
 		});
@@ -120,6 +122,10 @@ export class StripeClient {
 
 	createPaymentIntent = async opts => {
 		return await this.request('payment_intents', opts);
+	};
+
+	createRefund = async (opts, idempotencyKey) => {
+		return await this.request('refunds', opts, 'POST', idempotencyKey);
 	};
 
 	createTerminalLocation = async opts => {
