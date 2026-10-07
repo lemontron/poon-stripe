@@ -163,6 +163,10 @@ export class StripeClient {
 		return await this.request(`terminal/readers/${readerId}`, {}, 'GET');
 	};
 
+	retrievePaymentIntent = async paymentIntentId => {
+		return await this.request(`payment_intents/${paymentIntentId}`, {}, 'GET');
+	};
+
 	deleteTerminalReader = async readerId => {
 		return await this.request(`terminal/readers/${readerId}`, {}, 'DELETE');
 	};
