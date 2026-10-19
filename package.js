@@ -13,5 +13,6 @@ Package.onUse(api => {
 	api.use('meteor');
 	api.use('modules');
 	api.use('poon-api');
+	api.mainModule('business-structures.js', 'client');
 	api.mainModule('index.js', 'server');
 });

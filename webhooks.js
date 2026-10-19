@@ -4,9 +4,10 @@ import express from 'express';
 import { api } from 'meteor/poon-api';
 
 const stripeEventListeners = new Map();
+const stripeConfig = Meteor.isDevelopment ? Meteor.settings.stripeTest : Meteor.settings.stripe;
 
 const verifyStripeSignature = (req, res, next) => {
-	const secret = Meteor.isDevelopment ? Meteor.settings.stripeWebhookTest : Meteor.settings.stripeWebhookKey;
+	const secret = stripeConfig.webhookKey;
 	const body = req.body.toString('utf8');
 	const header = req.headers['stripe-signature'];
 

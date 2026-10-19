@@ -1,9 +1,10 @@
 import { Meteor } from 'meteor/meteor';
 import { createSearchParams } from './util';
-
 export { registerStripeEventListener } from './webhooks';
+export { stripeBusinessStructures } from './business-structures';
 
 export const STRIPE_VERSION = '2026-05-27.dahlia';
+const STRIPE_CONNECT_VERSION = '2026-09-30.endive';
 
 const createFileBlob = dataUrl => {
 	const [, contentType, data] = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
@@ -19,16 +20,17 @@ export class StripeClient {
 		this.secretKey = secretKey;
 	}
 
-	request = async (path, data = {}, method = 'POST', idempotencyKey) => {
-		const response = await fetch(`https://api.stripe.com/v1/${path}`, {
+	request = async (path, data = {}, method = 'POST', idempotencyKey, namespace = 'v1') => {
+		const isV2 = namespace === 'v2';
+		const response = await fetch(`https://api.stripe.com/${namespace}/${path}`, {
 			method,
 			'headers': {
 				'Authorization': `Bearer ${this.secretKey}`,
-				'Content-Type': 'application/x-www-form-urlencoded',
-				'Stripe-Version': STRIPE_VERSION,
+				'Content-Type': isV2 ? 'application/json' : 'application/x-www-form-urlencoded',
+				'Stripe-Version': isV2 ? STRIPE_CONNECT_VERSION : STRIPE_VERSION,
 				...(idempotencyKey ? {'Idempotency-Key': idempotencyKey} : {}),
 			},
-			'body': method === 'POST' ? createSearchParams(data) : undefined,
+			'body': method === 'POST' ? (isV2 ? JSON.stringify(data) : createSearchParams(data)) : undefined,
 		});
 		const json = await response.json();
 		if (!response.ok) {
@@ -113,11 +115,11 @@ export class StripeClient {
 	};
 
 	createConnectAccount = async opts => {
-		return await this.request('accounts', opts);
+		return await this.request('core/accounts', opts, 'POST', undefined, 'v2');
 	};
 
 	createAccountLink = async opts => {
-		return await this.request('account_links', opts);
+		return await this.request('core/account_links', opts, 'POST', undefined, 'v2');
 	};
 
 	createPaymentIntent = async opts => {
@@ -191,4 +193,5 @@ export class StripeClient {
 	};
 }
 
-export const Stripe = new StripeClient(Meteor.isDevelopment ? Meteor.settings.stripeTest : Meteor.settings.stripeKey);
+const stripeConfig = Meteor.isDevelopment ? Meteor.settings.stripeTest : Meteor.settings.stripe;
+export const Stripe = new StripeClient(stripeConfig.secretKey);
