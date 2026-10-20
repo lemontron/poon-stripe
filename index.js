@@ -22,7 +22,9 @@ export class StripeClient {
 
 	request = async (path, data = {}, method = 'POST', idempotencyKey, namespace = 'v1') => {
 		const isV2 = namespace === 'v2';
-		const response = await fetch(`https://api.stripe.com/${namespace}/${path}`, {
+		const url = new URL(`https://api.stripe.com/${namespace}/${path}`);
+		if (method === 'GET') url.search = createSearchParams(data).toString();
+		const response = await fetch(url, {
 			method,
 			'headers': {
 				'Authorization': `Bearer ${this.secretKey}`,
@@ -130,6 +132,14 @@ export class StripeClient {
 		return await this.request('refunds', opts, 'POST', idempotencyKey);
 	};
 
+	createTransfer = async (opts, idempotencyKey) => {
+		return await this.request('transfers', opts, 'POST', idempotencyKey);
+	};
+
+	createTransferReversal = async (transferId, opts, idempotencyKey) => {
+		return await this.request(`transfers/${transferId}/reversals`, opts, 'POST', idempotencyKey);
+	};
+
 	createTerminalLocation = async opts => {
 		return await this.request('terminal/locations', opts);
 	};
@@ -165,8 +175,8 @@ export class StripeClient {
 		return await this.request(`terminal/readers/${readerId}`, {}, 'GET');
 	};
 
-	retrievePaymentIntent = async paymentIntentId => {
-		return await this.request(`payment_intents/${paymentIntentId}`, {}, 'GET');
+	retrievePaymentIntent = async (paymentIntentId, opts = {}) => {
+		return await this.request(`payment_intents/${paymentIntentId}`, opts, 'GET');
 	};
 
 	deleteTerminalReader = async readerId => {
