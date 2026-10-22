@@ -82,7 +82,7 @@ export class StripeClient {
 			'product_data': {
 				'name': item.recipe.name,
 			},
-			'unit_amount': Math.round(item.price * 100),
+			'unit_amount': item.price,
 		},
 		'quantity': item.count,
 	});
@@ -93,25 +93,26 @@ export class StripeClient {
 			'product_data': {
 				'name': 'Tax',
 			},
-			'unit_amount': Math.round(price.tax * 100),
+			'unit_amount': price.tax,
 		},
 		'quantity': 1,
 	});
 
-	createCheckoutSession = async (order, transfer) => {
+	createCheckoutSession = async (order, payment) => {
 		return await this.request('checkout/sessions', {
 			'mode': 'payment',
 			'ui_mode': 'elements',
 			'return_url': `${Meteor.absoluteUrl()}kiosk/${order._id}/payment`,
 			'line_items': [
 				...order.items.map(this.createLineItem),
-				this.createTaxLineItem(transfer),
+				this.createTaxLineItem(payment),
 			],
 			'client_reference_id': order._id,
 			'metadata': {
 				'orderId': order._id,
-				'transferId': transfer._id,
+				'transferId': payment._id,
 			},
+			'payment_intent_data': {'metadata': {'orderId': order._id, 'transferId': payment._id}},
 			'payment_method_types': ['card'],
 		});
 	};
